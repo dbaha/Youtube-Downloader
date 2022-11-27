@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QMessageBox, QLineEdit,QLabel,QApplication, QWidget, QPushButton, QVBoxLayout
 
 # https://pythonspot.com/pyqt5-textbox-example/
+# https://www.pythonguis.com/tutorials/pyqt-layouts/
 app = QApplication([])
 window=QWidget()
 layout=QVBoxLayout()

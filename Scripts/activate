@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\python\Youtube-Downloader"
+VIRTUAL_ENV="C:\Python\Youtube-Downloader"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
