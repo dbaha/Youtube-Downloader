@@ -10,86 +10,83 @@ import pytube
 from moviepy.editor import *
 from pathlib import Path
 
-class LoadingModal(QDialog):
+class LoadingDialog(QDialog):
      process=""
-     progress=0
-     def __init__(self):
-          super().__init__()
-          self.setWindowTitle("Loading, please wait!")
-          self.setFixedSize(250,200)
-          self.layout=QVBoxLayout()
-          print (self.process)
-          msg=QLabel(f"Process:{0} {1}(%)")
-          self.layout.addWidget(msg)
-          self.setLayout(self.layout)
-          if self.progress==100:
-               self.close()
-
-class MainWindow(QMainWindow):
-     StartDownload=False
-     process=""
-     progress=0
+     progress=100
      
+     def __init__(self,_link):
+          super().__init__()
+          layout=QVBoxLayout()
+          ProgressBar=QProgressBar()
+          ProgressBar.setMinimum(0)
+          ProgressBar.setMaximum(self.progress)
+          layout.addWidget(ProgressBar)
+          self.msglabel=QLabel()
+          self.msglabel.text= self.process
+          layout.addWidget(self.msglabel)
+          self.setLayout(layout)
+          self.DownloadAndConvert(_link)
+
+     def PopUpNotif(self,msg):
+          alert = QMessageBox()
+          alert.setText(msg)
+          alert.exec()
      def mp4_to_mp3(self,mp4, mp3):    
           mp4_without_frames = AudioFileClip(mp4)     
           mp4_without_frames.write_audiofile(mp3)     
           mp4_without_frames.close()  
-     def thread(self):
-          # self.setWindowTitle("Progress "+str(self.progresspercnt)+"%")
-          # self.PopUpNotif("Starting")
-          t1=Thread(target=self.DownloadAndConvert)
-          t1.start()
-          load=LoadingModal()
-          load.exec()
-          
-          
-     def DownloadAndConvert(self):
+     
+
+     def DownloadAndConvert(self,link):
           if MainWindow.StartDownload==True:
                print("running") 
-               link=self.textbox.text()
+               print(f"link from download and convert {link}")
+               self.DownloadPath=str(Path.home()/ "Downloads")
                savefolder=self.DownloadPath
 
                # self.progresspercnt=5
                # self.setWindowTitle("Progress :Setup"+str(self.progresspercnt)+"%")
-               self.process="getlink"
+               # self.msglabel.setText="getlink"
                try:
+                    # self.ProgressBar.setValue(10)
                     yt = pytube.YouTube(link)
                except:
                     print("connection error or video not found") 
-                    self.PopUpNotif("connection error or video not found ")
-                    
+                    LoadingDialog.PopUpNotif(self,"connection error or video not found ")
                else:
-                    #do something      
-                    # self.progresspercnt=30
-                    # self.setWindowTitle("Progress :Downloading "+str(self.progresspercnt)+"%")
+                    
+                    # self.process.setValue(30)
                     mp4_files=yt.streams.get_audio_only("mp4")  
-                  
-                    # self.progresspercnt=43
-                    # self.setWindowTitle("Progress :Downloading "+str(self.progresspercnt)+"%")
                     parent_dir = savefolder
                     mp4_files.download(parent_dir)
+                    # self.ProgressBar.setValue(48)
                     default_filename = mp4_files.default_filename
                     new_filename = default_filename.replace('mp4','mp3')
+                    # self.ProgressBar.setValue(76)
                     mp4_path=parent_dir+"\\"+default_filename
                     mp3_path=parent_dir+"\\"+new_filename
-                    self.mp4_to_mp3(mp4_path,mp3_path)
-                    # self.progresspercnt=83
-                    # self.setWindowTitle("Progress :Converting "+str(self.progresspercnt)+"%")
+                    LoadingDialog.mp4_to_mp3(self,mp4_path,mp3_path)
+                    # self.ProgressBar.setValue(88)
                     os.remove(mp4_path)
-                    # self.progresspercnt=100
-                    # self.setWindowTitle("Progress :Finished "+str(self.progresspercnt)+"%")
-                    LoadingModal.progress=100
+                    # self.ProgressBar.setValue(99)
+                    LoadingDialog.PopUpNotif(self,f"{new_filename}: Downloaded, saved in download folder enjoy ")
                     print('done')
-                    # self.PopUpNotif("Success, enjoy :)!! ")
-                    # self.setWindowTitle("Youtube Mp3 Downloader")
+class MainWindow(QMainWindow):
+     StartDownload=False
+     process=""
+     progress=0
+    
      def inputprint(self,link:str,savefolder:str):
           print(self.textbox.text())
           print(savefolder)
-     def PopUpNotif(self,msg):
-               alert = QMessageBox()
-               alert.setText(msg)
-          
-               alert.exec()
+     def thread(self):
+          _link=self.textbox.text()
+          loading=LoadingDialog(_link)
+          print(f"link from thread: {_link}")
+          # t1=Thread(target=LoadingDialog.DownloadAndConvert(self,_link))
+          # t1.start()
+          t2=Thread(target=loading.exec)
+          t2.start()
                          
      def  __init__(self):
           super(MainWindow,self).__init__()
@@ -114,8 +111,7 @@ class MainWindow(QMainWindow):
           DownloadBtnTxt="Download"
           DownloadBtn=QPushButton(DownloadBtnTxt)
           MainScene.addWidget(DownloadBtn)
-          
-          
+
           DownloadBtn.clicked.connect(self.thread)
           # DownloadBtn.clicked.connect(lambda msg : PopUpNotif("wow"))
           MainWindow.StartDownload=True
@@ -132,7 +128,7 @@ if __name__== "__main__":
 
      window=MainWindow()          
      window.show()
-     sys.exit(app.exec()) 
+     app.exec()
 
 
 
