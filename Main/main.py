@@ -1,137 +1,142 @@
-import os
-import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtCore import QSize
-from threading import *
-import pytube 
-from moviepy.editor import *
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSignal
 from pathlib import Path
+import pytube
+import os
+from moviepy.editor import AudioFileClip
+from threading import *
 
-class LoadingDialog(QDialog):
-     process=""
-     progress=100
-     
-     def __init__(self,_link):
-          super().__init__()
-          layout=QVBoxLayout()
-          ProgressBar=QProgressBar()
-          ProgressBar.setMinimum(0)
-          ProgressBar.setMaximum(self.progress)
-          layout.addWidget(ProgressBar)
-          self.msglabel=QLabel()
-          self.msglabel.text= self.process
-          layout.addWidget(self.msglabel)
-          self.setLayout(layout)
-          self.DownloadAndConvert(_link)
+class Ui_MainWindow(QtWidgets.QMainWindow):
+     # Signal   
+    statmsg= pyqtSignal(str)
+    progressVal= pyqtSignal(int)
+    
+    def setupUi(self, MainWindow):
+        
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(547, 441)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(60, 50, 431, 61))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.TitleLabel = QtWidgets.QLabel(self.verticalLayoutWidget)
+        font = QtGui.QFont()
+        font.setPointSize(26)
+        self.TitleLabel.setFont(font)
+        self.TitleLabel.setObjectName("TitleLabel")
+        self.verticalLayout.addWidget(self.TitleLabel, 0, QtCore.Qt.AlignHCenter)
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(50, 130, 441, 51))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.LinkLabel = QtWidgets.QLabel(self.horizontalLayoutWidget)
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.LinkLabel.setFont(font)
+        self.LinkLabel.setObjectName("LinkLabel")
+        self.horizontalLayout.addWidget(self.LinkLabel)
+        self.YoutubeLinkLineEdit = QtWidgets.QLineEdit(self.horizontalLayoutWidget)
+        self.YoutubeLinkLineEdit.setObjectName("YoutubeLinkLineEdit")
+        self.horizontalLayout.addWidget(self.YoutubeLinkLineEdit)
+        self.DownloadButton = QtWidgets.QPushButton(self.centralwidget, clicked=lambda: self.download())
+        self.DownloadButton.setGeometry(QtCore.QRect(160, 220, 231, 71))
+        font = QtGui.QFont()
+        font.setPointSize(36)
+        self.DownloadButton.setFont(font)
+        self.DownloadButton.setObjectName("DownloadButton")
+        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        self.progressBar.setGeometry(QtCore.QRect(60, 370, 441, 23))
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setObjectName("progressBar")
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        
+        # connect signal
+        self.statmsg.connect(self.statusbar.showMessage)
+        self.progressVal.connect(self.progressBar.setValue)
 
-     def PopUpNotif(self,msg):
-          alert = QMessageBox()
-          alert.setText(msg)
-          alert.exec()
-     def mp4_to_mp3(self,mp4, mp3):    
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "Youtube mp3 Downloader"))
+        self.TitleLabel.setText(_translate("MainWindow", "Youtube Mp3 Downloader"))
+        self.LinkLabel.setText(_translate("MainWindow", "Youtube Link : "))
+        self.DownloadButton.setText(_translate("MainWindow", "Download"))
+
+
+    def Mp4toMp3(self,mp4,mp3):
           mp4_without_frames = AudioFileClip(mp4)     
-          mp4_without_frames.write_audiofile(mp3)     
-          mp4_without_frames.close()  
-     
-
-     def DownloadAndConvert(self,link):
-          if MainWindow.StartDownload==True:
-               print("running") 
-               print(f"link from download and convert {link}")
-               self.DownloadPath=str(Path.home()/ "Downloads")
-               savefolder=self.DownloadPath
-
-               # self.progresspercnt=5
-               # self.setWindowTitle("Progress :Setup"+str(self.progresspercnt)+"%")
-               # self.msglabel.setText="getlink"
-               try:
-                    # self.ProgressBar.setValue(10)
-                    yt = pytube.YouTube(link)
-               except:
-                    print("connection error or video not found") 
-                    LoadingDialog.PopUpNotif(self,"connection error or video not found ")
-               else:
-                    
-                    # self.process.setValue(30)
-                    mp4_files=yt.streams.get_audio_only("mp4")  
-                    parent_dir = savefolder
-                    mp4_files.download(parent_dir)
-                    # self.ProgressBar.setValue(48)
-                    default_filename = mp4_files.default_filename
-                    new_filename = default_filename.replace('mp4','mp3')
-                    # self.ProgressBar.setValue(76)
-                    mp4_path=parent_dir+"\\"+default_filename
-                    mp3_path=parent_dir+"\\"+new_filename
-                    LoadingDialog.mp4_to_mp3(self,mp4_path,mp3_path)
-                    # self.ProgressBar.setValue(88)
-                    os.remove(mp4_path)
-                    # self.ProgressBar.setValue(99)
-                    LoadingDialog.PopUpNotif(self,f"{new_filename}: Downloaded, saved in download folder enjoy ")
-                    print('done')
-class MainWindow(QMainWindow):
-     StartDownload=False
-     process=""
-     progress=0
+          mp4_without_frames.write_audiofile(mp3,write_logfile=False,verbose=False,logger=None)     
+        #    mp4_without_frames.write_audiofile(mp3,write_logfile=False,verbose=true, logger=bar)     
+          mp4_without_frames.close() 
+   
     
-     def inputprint(self,link:str,savefolder:str):
-          print(self.textbox.text())
-          print(savefolder)
-     def thread(self):
-          _link=self.textbox.text()
-          loading=LoadingDialog(_link)
-          print(f"link from thread: {_link}")
-          # t1=Thread(target=LoadingDialog.DownloadAndConvert(self,_link))
-          # t1.start()
-          t2=Thread(target=loading.exec)
-          t2.start()
-                         
-     def  __init__(self):
-          super(MainWindow,self).__init__()
-          self.setWindowTitle("Youtube Mp3 Downloader")
-          self.setFixedSize(500,300)
+    def download(self):
+        self.statmsg.emit("Starting")
+        self.progressVal.emit(5)
+        _link=self.YoutubeLinkLineEdit.text()
+        print(_link)
+        try:
+            self.statmsg.emit("Searching Youtube video")
+            self.progressVal.emit(15)
+            yt=pytube.YouTube(_link)
+        except:
+             self.statmsg.emit("Video not found")
+             self.progressVal.emit(100)
+             print("connection error or video not found")
+             alert=QtWidgets.QMessageBox(text="Connection error or video not found.")   
+             alert.setWindowTitle("We have trouble :( ") 
+             alert.exec()
+        else:
+            self.statmsg.emit("Video found, Getting audio")
+            self.progressVal.emit(26)
+            Mp4Files=yt.streams.get_audio_only("mp4")
+            SaveFolder=str(Path.home()/"Downloads")
+            self.statmsg.emit("Downloading")
+            self.progressVal.emit(57)
+            Mp4Files.download(SaveFolder)
+            print("downloading")
+            DefaultFilename=Mp4Files.default_filename
+            NewFilename=DefaultFilename.replace('mp4','mp3')
+            self.statmsg.emit("Converting")
+            self.progressVal.emit(76)
+            print("change file name")
+            TempMp4=SaveFolder+"\\"+DefaultFilename
+            TempMp3=SaveFolder+"\\"+NewFilename
+            self.progressVal.emit(89)
+            self.Mp4toMp3(TempMp4,TempMp3)
+            print("convert")
+            self.progressVal.emit(95)
+            os.remove(TempMp4)
+            self.statmsg.emit("Downloaded")
+            self.progressVal.emit(100)
+            alert=QtWidgets.QMessageBox(text=f"{NewFilename}: Downloaded, saved in download folder enjoy <3 ")    
+            alert.setWindowTitle("Yeahh :) ")
+            alert.exec()
+            print("done")
 
-          MainScene= QVBoxLayout()
-          self.DownloadPath=str(Path.home()/ "Downloads")
-          print (self.DownloadPath)
-          # user input
-          InputLinkLayout= QHBoxLayout()
-          InsertLinkTxt="Yotube Link"
-          InputLinkLayout.addWidget(QLabel(InsertLinkTxt))
-          self.textbox=QLineEdit(self)
-          self.textbox.resize(280,40)
-          self.textbox.move(20,20)
-
-          InputLinkLayout.addWidget(self.textbox)
-          MainScene.addLayout(InputLinkLayout)
-     
-          # download btn
-          DownloadBtnTxt="Download"
-          DownloadBtn=QPushButton(DownloadBtnTxt)
-          MainScene.addWidget(DownloadBtn)
-
-          DownloadBtn.clicked.connect(self.thread)
-          # DownloadBtn.clicked.connect(lambda msg : PopUpNotif("wow"))
-          MainWindow.StartDownload=True
-
-          widget=QWidget()
-          widget.setLayout(MainScene)
-          self.setCentralWidget(widget)
-          
-
-
-if __name__== "__main__":
-     app =QApplication(sys.argv)
-     app.processEvents()
-
-     window=MainWindow()          
-     window.show()
-     app.exec()
+    def run(self):
+        t1=Thread(target=self.download())
+        t1.start
 
 
 
-
-
-    
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
+    # app.exec_()
