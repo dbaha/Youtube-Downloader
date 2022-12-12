@@ -45,7 +45,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.YoutubeLinkLineEdit.setObjectName("YoutubeLinkLineEdit")
         self.horizontalLayout.addWidget(self.YoutubeLinkLineEdit)
         self.DownloadButton = QtWidgets.QPushButton(self.centralwidget, clicked=lambda: self.download())
-        self.DownloadButton.setGeometry(QtCore.QRect(160, 220, 231, 71))
+        self.DownloadButton.setGeometry(QtCore.QRect(150, 280, 231, 71))
         font = QtGui.QFont()
         font.setPointSize(36)
         self.DownloadButton.setFont(font)
@@ -54,10 +54,32 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.progressBar.setGeometry(QtCore.QRect(60, 370, 441, 23))
         self.progressBar.setProperty("value", 0)
         self.progressBar.setObjectName("progressBar")
+        self.verticalLayoutWidget_2 = QtWidgets.QWidget(self.centralwidget)
+        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(190, 190, 170, 41))
+        self.verticalLayoutWidget_2.setObjectName("verticalLayoutWidget_2")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label = QtWidgets.QLabel(self.verticalLayoutWidget_2)
+        self.label.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft)
+        self.label.setObjectName("label")
+        self.verticalLayout_2.addWidget(self.label)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(6)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.radioButton = QtWidgets.QRadioButton(self.verticalLayoutWidget_2)
+        self.radioButton.setObjectName("radioButton")
+        self.radioButton.setChecked(True)
+        self.horizontalLayout_2.addWidget(self.radioButton)
+        self.radioButton_2 = QtWidgets.QRadioButton(self.verticalLayoutWidget_2)
+        self.radioButton_2.setObjectName("radioButton_2")
+        self.horizontalLayout_2.addWidget(self.radioButton_2)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        
         
         # connect signal
         self.statmsg.connect(self.statusbar.showMessage)
@@ -72,11 +94,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.TitleLabel.setText(_translate("MainWindow", "Youtube Mp3 Downloader"))
         self.LinkLabel.setText(_translate("MainWindow", "Youtube Link : "))
         self.DownloadButton.setText(_translate("MainWindow", "Download"))
+        self.label.setText(_translate("MainWindow", "Convert to:"))
+        self.radioButton.setText(_translate("MainWindow", ".wav"))
+        self.radioButton_2.setText(_translate("MainWindow", ".mp3"))
 
 
-    def Mp4toMp3(self,mp4,mp3):
-          mp4_without_frames = AudioFileClip(mp4)     
-          mp4_without_frames.write_audiofile(mp3,write_logfile=False,verbose=False,logger=None)     
+    def ConvertAudioFile(self,video,convert):
+          mp4_without_frames = AudioFileClip(video)     
+          mp4_without_frames.write_audiofile(convert,write_logfile=False,verbose=False,logger=None)     
         #    mp4_without_frames.write_audiofile(mp3,write_logfile=False,verbose=true, logger=bar)     
           mp4_without_frames.close() 
    
@@ -105,19 +130,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.statmsg.emit("Downloading")
             self.progressVal.emit(57)
             Mp4Files.download(SaveFolder)
-            print("downloading")
+            # checking condition 
             DefaultFilename=Mp4Files.default_filename
-            NewFilename=DefaultFilename.replace('mp4','mp3')
+            if self.radioButton.isChecked():
+                # wav
+                NewFilename=DefaultFilename.replace('mp4','wav')
+            if self.radioButton_2.isChecked():
+                # mp3
+                NewFilename=DefaultFilename.replace('mp4','mp3') 
+            print("downloading") 
             self.statmsg.emit("Converting")
             self.progressVal.emit(76)
             print("change file name")
-            TempMp4=SaveFolder+"\\"+DefaultFilename
-            TempMp3=SaveFolder+"\\"+NewFilename
+
+            convertvideofile=SaveFolder+"\\"+DefaultFilename
+            convertaudiofile=SaveFolder+"\\"+NewFilename
             self.progressVal.emit(89)
-            self.Mp4toMp3(TempMp4,TempMp3)
+            self.ConvertAudioFile(convertvideofile,convertaudiofile)
             print("convert")
             self.progressVal.emit(95)
-            os.remove(TempMp4)
+            os.remove(convertvideofile)
             self.statmsg.emit("Downloaded")
             self.progressVal.emit(100)
             alert=QtWidgets.QMessageBox(text=f"{NewFilename}: Downloaded, saved in download folder enjoy <3 ")    
