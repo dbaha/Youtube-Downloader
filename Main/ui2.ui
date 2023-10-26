@@ -54,7 +54,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>.wav</string>
+      <string>.wav(Audio)</string>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioButtonMp3">
@@ -67,7 +67,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>.mp3</string>
+      <string>.mp3(audio)</string>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioButtonMp4">
@@ -80,7 +80,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>.mp4</string>
+      <string>.mp4(Video)</string>
      </property>
     </widget>
    </widget>

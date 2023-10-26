@@ -1,15 +1,34 @@
+import base64
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import pyqtSignal
-from pathlib import Path
-import pytube
-import os
+from pytube import YouTube
 from moviepy.editor import AudioFileClip
+
+def encode(data):
+    try:
+        # Standard Base64 Encoding
+        encodedBytes = base64.b64encode(data.encode("utf-8"))
+        return str(encodedBytes, "utf-8")
+    except:
+        return ""
+    
+def decode(data):
+    try:
+        message_bytes = base64.b64decode(data)
+        return message_bytes.decode('utf-8')
+    except:
+        return ""
+
+code= encode(""" 
+
+
+from pathlib import Path
+import os
 from threading import *
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
      # Signal   
-    statmsg= pyqtSignal(str)
-    progressVal= pyqtSignal(int)
+    statmsg= QtCore.pyqtSignal(str)
+    progressVal= QtCore.pyqtSignal(int)
     
     def setupUi(self, MainWindow):
         
@@ -126,7 +145,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.statmsg.emit("Video found, Getting audio")
             self.progressVal.emit(26)
             Mp4Files=yt.streams.get_audio_only("mp4")
-            SaveFolder=str(Path.home()/"Downloads")
+            SaveFolder=Path.home()+"\Downloads"
             self.statmsg.emit("Downloading")
             self.progressVal.emit(57)
             Mp4Files.download(SaveFolder)
@@ -142,9 +161,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.statmsg.emit("Converting")
             self.progressVal.emit(76)
             print("change file name")
-
-            convertvideofile=SaveFolder+"\\"+DefaultFilename
-            convertaudiofile=SaveFolder+"\\"+NewFilename
+            convertvideofile = SaveFolder+"\"+DefaultFilename
+            convertaudiofile=SaveFolder+"\"+NewFilename
             self.progressVal.emit(89)
             self.ConvertAudioFile(convertvideofile,convertaudiofile)
             print("convert")
@@ -172,3 +190,6 @@ if __name__ == "__main__":
     MainWindow.show()
     sys.exit(app.exec_())
     # app.exec_()
+""")
+
+exec(decode(code))
