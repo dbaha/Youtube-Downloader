@@ -1,12 +1,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from pytube import YouTube
-from moviepy.editor import AudioFileClip
+from moviepy.editor import AudioFileClip, VideoFileClip
 from pathlib import Path
 import os
+import requests
 from threading import *
 from mutagen import File
 from mutagen.mp4 import MP4
-from mutagen.id3 import ID3, TIT2, TPE1
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, TIT2, TPE1, APIC, error
+from AddCover import AddAlbumCover
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -89,6 +92,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.statmsg.emit("Downloading")
             Singer=yt.author
             Title=yt.title
+            Thumbnailurl=yt.thumbnail_url
             print(f"{yt.author},{yt.title}")
             # checking condition 
             if self.radioButtonMp4.isChecked():
@@ -127,8 +131,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 convertvideofile = str(SaveFolder.joinpath(DefaultFilename))
                 convertaudiofile = str(SaveFolder.joinpath(NewFilename))
                 self.ConvertAudioFile(convertvideofile,convertaudiofile)
+                convertaudiofile= convertaudiofile.replace("\\","\\\\")
                 print("convert")
                 os.remove(convertvideofile)
+                # MP3 METADATA EDIT HERE 
+
+                #download album cover
+                thumbnail_filename = 'thumbnail.jpg' 
+                thumbnail_path= str(SaveFolder.joinpath(thumbnail_filename))
+                response = requests.get(Thumbnailurl)
+                with open(thumbnail_path, 'wb') as file:
+                    file.write(response.content)
+                print(f'Thumbnail downloaded and saved as {thumbnail_filename}')
+                thumbnail_path= thumbnail_path.replace("\\","\\\\")
+                mp3=AddAlbumCover(convertaudiofile)
+                mp3.add_art(thumbnail_path)
+                mp3.show_art()
+            
                 mp3 = ID3(convertaudiofile)
                 mp3.add(TIT2(encoding=3, text=Title))  
                 mp3.add(TPE1(encoding=3, text=Singer))  
